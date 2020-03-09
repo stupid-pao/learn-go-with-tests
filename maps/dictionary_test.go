@@ -1,7 +1,6 @@
 package maps
 
 import (
-	"errors"
 	"testing"
 )
 
@@ -13,13 +12,11 @@ func (e DictionaryErr) Error() string {
 	return string(e)
 }
 
-var (
-	ErrNotFound   = errors.New("could not find the word you were looking for")
-	ErrWordExists = errors.New("cannot add word because it already exists")
+const (
+	ErrNotFound   = DictionaryErr("could not find the word you were looking for")
+	ErrWordExists = DictionaryErr("cannot add word because it already exists")
 )
 
-//var ErrNotFound = DictionaryErr.Error("could not find the word you were looking for")
-//var ErrWordExists = DictionaryErr.Error("cannot add word because it already exists")
 //var ErrWordNotExists = DictionaryErr.Error("can not update word because it does not exists")
 
 func (d Dictionary) Search(word string) (string, error) {
