@@ -13,11 +13,10 @@ func (e DictionaryErr) Error() string {
 }
 
 const (
-	ErrNotFound   = DictionaryErr("could not find the word you were looking for")
-	ErrWordExists = DictionaryErr("cannot add word because it already exists")
+	ErrNotFound      = DictionaryErr("could not find the word you were looking for")
+	ErrWordExists    = DictionaryErr("cannot add word because it already exists")
+	ErrWordNotExists = DictionaryErr("can not update word because it does not exists")
 )
-
-//var ErrWordNotExists = DictionaryErr.Error("can not update word because it does not exists")
 
 func (d Dictionary) Search(word string) (string, error) {
 	definition, ok := d[word]
@@ -40,6 +39,27 @@ func (d Dictionary) Add(word, definition string) error {
 		return err
 	}
 
+	return nil
+}
+
+//func (d *Dictionary) Delete(word string) {
+//delete(*d, word)
+//}
+func (d Dictionary) Delete(word string) {
+	delete(d, word)
+}
+
+func (d Dictionary) Update(word, definition string) error {
+	_, err := d.Search(word)
+
+	switch err {
+	case ErrNotFound:
+		return ErrWordNotExists
+	case nil:
+		d[word] = definition
+	default:
+		return err
+	}
 	return nil
 }
 
@@ -99,6 +119,7 @@ func TestAdd(t *testing.T) {
 }
 
 func assertDefinition(t *testing.T, dictionary Dictionary, word, definition string) {
+	t.Helper()
 	got, err := dictionary.Search(word)
 	if err != nil {
 		t.Fatal("should find added word", err)
@@ -108,6 +129,42 @@ func assertDefinition(t *testing.T, dictionary Dictionary, word, definition stri
 		t.Errorf("got '%s' want '%s'", got, definition)
 	}
 
+}
+
+func TestUpdate(t *testing.T) {
+	t.Run("existing word", func(t *testing.T) {
+		word := "test"
+		definition := "this is just a test"
+		dictionary := Dictionary{word: definition}
+		newDefinition := "new definition"
+
+		err := dictionary.Update(word, newDefinition)
+
+		assertError(t, err, nil)
+		assertDefinition(t, dictionary, word, newDefinition)
+	})
+
+	t.Run("new word", func(t *testing.T) {
+		word := "test"
+		definition := "this is just a test"
+		dictionary := Dictionary{}
+
+		err := dictionary.Update(word, definition)
+
+		assertError(t, err, ErrWordNotExists)
+	})
+}
+
+func TestDelete(t *testing.T) {
+	word := "test"
+	dictionary := Dictionary{word: "test definition"}
+
+	dictionary.Delete(word)
+
+	_, err := dictionary.Search(word)
+	if err != ErrNotFound {
+		t.Errorf("Expected '%s' to be deleted", word)
+	}
 }
 
 /*
