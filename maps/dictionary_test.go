@@ -1,8 +1,5 @@
 package maps
 
-import (
-	"testing"
-)
 
 type Dictionary map[string]string
 
@@ -162,10 +159,12 @@ func TestDelete(t *testing.T) {
 	dictionary.Delete(word)
 
 	_, err := dictionary.Search(word)
-	if err != ErrNotFound {
+	if err !=ErrNotFound {
+
 		t.Errorf("Expected '%s' to be deleted", word)
 	}
 }
+
 
 /*
 map 作为引用类型很好，因为无论map有多大，都只会有一个副本。
