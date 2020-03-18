@@ -30,6 +30,22 @@ func (o *ConfigerableSleeper) sleep() {
 	time.Sleep(o.duration)
 }
 
+type CountdownOperationSpy struct {
+	Calls []string
+}
+
+const write = "write"
+const sleep = "sleep"
+
+func (s *CountdownOperationSpy) sleep() {
+	s.Calls = append(s.Calls, sleep)
+}
+
+func (s *CountdownOperationSpy) Write(p []byte) (n int, err error) {
+	s.Calls = append(s.Calls, write)
+	return
+}
+
 func Countdown(out io.Writer, sleeper Sleeper) {
 	for i := countdownStart; i > 0; i-- {
 		sleeper.sleep()
