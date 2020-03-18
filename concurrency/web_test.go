@@ -3,6 +3,7 @@ package concurrency
 import (
 	"reflect"
 	"testing"
+	"time"
 )
 
 func mockWebsiteChecker(url string) bool {
@@ -37,3 +38,41 @@ func TestCheckWebsites(t *testing.T) {
 		t.Fatalf("Wanted %v, got %v", expecteResults, actualResults)
 	}
 }
+
+func slowStubWebsiteChecker(_ string) bool {
+	time.Sleep(20 * time.Millisecond)
+	return true
+}
+
+func BenchmarkCheckWebsites(b *testing.B) {
+	urls := make([]string, 100)
+	for i := 0; i < len(urls); i++ {
+		urls[i] = "a url"
+	}
+
+	for i := 0; i < b.N; i++ {
+		CheckWebsites(slowStubWebsiteChecker, urls)
+	}
+}
+
+func TestBenchmarkCheckWebsites(t *testing.T) {
+	type args struct {
+		b *testing.B
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			BenchmarkCheckWebsites(tt.args.b)
+		})
+	}
+}
+
+/*
+go test -bench=.   运行基准测试时使用
+go test -race 可以通过内置的 race detector 查看是否发生了数据竞争
+*/
