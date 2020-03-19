@@ -55,22 +55,22 @@ func BenchmarkCheckWebsites(b *testing.B) {
 	}
 }
 
-func TestBenchmarkCheckWebsites(t *testing.T) {
-	type args struct {
-		b *testing.B
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			BenchmarkCheckWebsites(tt.args.b)
-		})
-	}
-}
+// func TestBenchmarkCheckWebsites(t *testing.T) {
+// 	type args struct {
+// 		b *testing.B
+// 	}
+// 	tests := []struct {
+// 		name string
+// 		args args
+// 	}{
+// 		// TODO: Add test cases.
+// 	}
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			BenchmarkCheckWebsites(tt.args.b)
+// 		})
+// 	}
+// }
 
 /*
 go test -bench=.   运行基准测试时使用
