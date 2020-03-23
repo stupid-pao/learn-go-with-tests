@@ -6,26 +6,33 @@ import (
 	"net/http"
 )
 
-func PlayerServer(w http.ResponseWriter, r *http.Request) {
-	player := r.URL.Path[len("/players/"):]
-
-	fmt.Fprint(w, GetPlayerScore(player))
-
+type PlayerStore interface {
+	GetPlayerScore(name string) int
 }
 
-func GetPlayerScore(name string) string {
-	switch name {
-	case "pepper":
-		return "20"
-	case "Floyd":
-		return "10"
-	}
-	return ""
+type PlayerServer struct {
+	store PlayerStore
+}
+
+func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	player := r.URL.Path[len("/players/"):]
+
+	fmt.Fprint(w, p.store.GetPlayerScore(player))
+}
+
+type stubPlayStore struct {
+	scores map[string]int
+}
+
+func (s *stubPlayStore) GetPlayerScore(name string) int {
+	score := s.scores[name]
+	return score
 }
 
 func main() {
-	handler := http.HandlerFunc(PlayerServer) // 注意这个声明  type HandlerFunc func(ResponseWriter, *Request)
-	if err := http.ListenAndServe(":5000", handler); err != nil {
+	server := &PlayerServer{}
+
+	if err := http.ListenAndServe(":5000", server); err != nil {
 		log.Fatalf("could not listen on port 5000 %v", err)
 	}
 

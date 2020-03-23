@@ -8,11 +8,19 @@ import (
 )
 
 func TestHttp(t *testing.T) {
+	store := stubPlayStore{
+		map[string]int{
+			"pepper": 20,
+			"Floyd":  10,
+		},
+	}
+	server := &PlayerServer{&store}
+
 	t.Run("return pepper's score", func(t *testing.T) {
 		request := newGetScoreRequest("pepper")
 		response := httptest.NewRecorder() // 创建一个监听器, 它有很多方法可以检查 response 被写入了什么
 
-		PlayerServer(response, request)
+		server.ServeHTTP(response, request)
 
 		got := response.Body.String()
 		want := "20"
@@ -24,7 +32,7 @@ func TestHttp(t *testing.T) {
 		request := newGetScoreRequest("Floyd")
 		response := httptest.NewRecorder()
 
-		PlayerServer(response, request)
+		server.ServeHTTP(response, request)
 
 		got := response.Body.String()
 		want := "10"
