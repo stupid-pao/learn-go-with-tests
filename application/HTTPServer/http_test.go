@@ -8,7 +8,7 @@ import (
 )
 
 func TestHttp(t *testing.T) {
-	store := stubPlayStore{
+	store := StubPlayStore{
 		map[string]int{
 			"pepper": 20,
 			"Floyd":  10,
@@ -59,7 +59,25 @@ func TestHttp(t *testing.T) {
 
 }
 
+func TestStoreWin(t *testing.T) {
+	store := StubPlayStore{
+		map[string]int{},
+	}
+	server := &PlayerServer{&store}
+
+	t.Run("it return accept on POST", func(t *testing.T) {
+		request, _ := http.NewRequest(http.MethodPost, "player/pepper", nil)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusAccepted)
+	})
+
+}
+
 func assertStatus(t *testing.T, got, want int) {
+	t.Helper()
 	if got != want {
 		t.Errorf("did not get correct status, got %d want %d", got, want)
 	}

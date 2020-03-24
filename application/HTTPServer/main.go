@@ -15,6 +15,11 @@ type PlayerServer struct {
 }
 
 func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+
+	if r.Method == http.MethodPost {
+		w.WriteHeader(http.StatusAccepted)
+		return
+	}
 	player := r.URL.Path[len("/players/"):]
 
 	score := p.store.GetPlayerScore(player)
@@ -26,11 +31,11 @@ func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, score)
 }
 
-type stubPlayStore struct {
+type StubPlayStore struct {
 	scores map[string]int
 }
 
-func (s *stubPlayStore) GetPlayerScore(name string) int {
+func (s *StubPlayStore) GetPlayerScore(name string) int {
 	score := s.scores[name]
 	return score
 }
