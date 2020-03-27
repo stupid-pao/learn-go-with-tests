@@ -8,11 +8,12 @@ import (
 )
 
 func TestHttp(t *testing.T) {
-	store := StubPlayStore{
+	store := StubPlayerStore{
 		map[string]int{
 			"pepper": 20,
 			"Floyd":  10,
 		},
+		nil,
 	}
 	server := &PlayerServer{&store}
 
@@ -60,20 +61,50 @@ func TestHttp(t *testing.T) {
 }
 
 func TestStoreWin(t *testing.T) {
-	store := StubPlayStore{
+	store := StubPlayerStore{
 		map[string]int{},
+		nil,
 	}
 	server := &PlayerServer{&store}
 
-	t.Run("it return accept on POST", func(t *testing.T) {
-		request, _ := http.NewRequest(http.MethodPost, "player/pepper", nil)
+	// t.Run("it return accept on POST", func(t *testing.T) {
+	// 	request := newPostWinRequest("pepper")
+	// 	response := httptest.NewRecorder()
+
+	// 	server.ServeHTTP(response, request)
+
+	// 	assertStatus(t, response.Code, http.StatusAccepted)
+
+	// 	if len(store.winCalls) != 1 {
+	// 		t.Errorf("got %d calls to RecordWith want %d", len(store.winCalls), 1)
+	// 	}
+	// })
+
+	t.Run("it records wins on POST", func(t *testing.T) {
+		player := "Pepper"
+
+		request := newPostWinRequest(player)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 
 		assertStatus(t, response.Code, http.StatusAccepted)
+
+		// t.Fatalf("len = %d, %v", len(store.winCalls), store.winCalls)
+		if len(store.winCalls) != 1 {
+			t.Fatalf("got %d calls to RecordWin want %d", len(store.winCalls), 1)
+		}
+
+		if store.winCalls[0] != player {
+			t.Errorf("did not store correct winner got '%s' want '%s'", store.winCalls[0], player)
+		}
 	})
 
+}
+
+func newPostWinRequest(name string) *http.Request {
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", name), nil)
+	return req
 }
 
 func assertStatus(t *testing.T, got, want int) {
