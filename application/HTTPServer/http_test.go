@@ -103,7 +103,7 @@ func TestStoreWin(t *testing.T) {
 }
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	store := NewInMemoryPlsyerStore()
+	store := NewInMemoryPlayerStore()
 	server := PlayerServer{store}
 	player := "pepper"
 
