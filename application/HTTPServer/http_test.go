@@ -14,6 +14,7 @@ func TestHttp(t *testing.T) {
 			"Floyd":  10,
 		},
 		nil,
+		nil,
 	}
 	server := NewPlayerServer(&store)
 
@@ -63,6 +64,7 @@ func TestHttp(t *testing.T) {
 func TestStoreWin(t *testing.T) {
 	store := StubPlayerStore{
 		map[string]int{},
+		nil,
 		nil,
 	}
 	server := NewPlayerServer(&store)

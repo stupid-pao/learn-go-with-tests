@@ -3,6 +3,7 @@ package main
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
+	league   []Player
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) int {
@@ -14,18 +15,26 @@ func (s *StubPlayerStore) RecordWin(name string) {
 	s.winCalls = append(s.winCalls, name)
 }
 
-func NewInMemoryPlayerStore() *InMemoryPlsyerStore {
-	return &InMemoryPlsyerStore{map[string]int{}}
+func (s *StubPlayerStore) GetLeague() []Player {
+	return s.league
 }
 
-type InMemoryPlsyerStore struct {
+func NewInMemoryPlayerStore() *InMemoryPlayerStore {
+	return &InMemoryPlayerStore{map[string]int{}}
+}
+
+type InMemoryPlayerStore struct {
 	store map[string]int
 }
 
-func (i *InMemoryPlsyerStore) GetPlayerScore(name string) int {
+func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
 	return i.store[name]
 }
 
-func (i *InMemoryPlsyerStore) RecordWin(name string) {
+func (i *InMemoryPlayerStore) RecordWin(name string) {
 	i.store[name]++
+}
+
+func (i *InMemoryPlayerStore) GetLeague() []Player {
+	return nil
 }
