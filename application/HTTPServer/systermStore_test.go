@@ -1,13 +1,15 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
-	"strings"
+	"io/ioutil"
+	"os"
 	"testing"
 )
 
 type FileSystemStore struct {
-	database io.ReadSeeker
+	database io.ReadWriteSeeker
 }
 
 func (f *FileSystemStore) GetLeague() []Player {
@@ -30,13 +32,27 @@ func (f *FileSystemStore) GetPlayerStore(name string) int {
 	return wins
 }
 
+func (f *FileSystemStore) RecordWin(name string) {
+	league := f.GetLeague()
+
+	for i, player := range league {
+		if player.Name == name {
+			league[i].Wins++
+		}
+	}
+
+	f.database.Seek(0, 0)
+	json.NewEncoder(f.database).Encode(league)
+
+}
+
 func TestFileSystemStore(t *testing.T) {
 
 	t.Run("/league from a reader", func(t *testing.T) {
-		// NewReader 也实现了 ReadSeeker，所以可以用
-		database := strings.NewReader(`[
+		database, cleanDatabase := createTempFile(t, `[
 		    {"Name": "Cleo", "Wins": 10},
 		    {"Name": "Chris", "Wins": 33}]`)
+		defer cleanDatabase()
 
 		store := FileSystemStore{database}
 
@@ -54,9 +70,10 @@ func TestFileSystemStore(t *testing.T) {
 	})
 
 	t.Run("get player score", func(t *testing.T) {
-		database := strings.NewReader(`[
+		database, cleanDatabase := createTempFile(t, `[
 		    {"Name": "Cleo", "Wins": 10},
 		    {"Name": "Chris", "Wins": 33}]`)
+		defer cleanDatabase()
 
 		store := FileSystemStore{database}
 
@@ -66,6 +83,22 @@ func TestFileSystemStore(t *testing.T) {
 
 		assertScoreEquals(t, got, want)
 	})
+
+	t.Run("store wins for existing players", func(t *testing.T) {
+		database, cleanDatabase := createTempFile(t, `[
+		    {"Name": "Cleo", "Wins": 10},
+		    {"Name": "Chris", "Wins": 33}]`)
+		defer cleanDatabase()
+
+		store := FileSystemStore{database}
+
+		store.RecordWin("Chris")
+
+		got := store.GetPlayerStore("Chris")
+
+		want := 34
+		assertScoreEquals(t, got, want)
+	})
 }
 
 func assertScoreEquals(t *testing.T, got, want int) {
@@ -73,4 +106,23 @@ func assertScoreEquals(t *testing.T, got, want int) {
 	if got != want {
 		t.Errorf("got %d want %d", got, want)
 	}
+}
+
+func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func()) {
+	t.Helper()
+
+	tmpfile, err := ioutil.TempFile("", "db")
+
+	if err != nil {
+		t.Fatalf("could not create temp file %v", err)
+	}
+
+	tmpfile.Write([]byte(initialData))
+
+	removeFile := func() {
+		os.Remove(tmpfile.Name())
+	}
+
+	return tmpfile, removeFile
+
 }
