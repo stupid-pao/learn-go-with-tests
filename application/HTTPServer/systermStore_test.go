@@ -12,33 +12,27 @@ type FileSystemStore struct {
 	database io.ReadWriteSeeker
 }
 
-func (f *FileSystemStore) GetLeague() []Player {
+func (f *FileSystemStore) GetLeague() League {
 	f.database.Seek(0, 0)
 	league, _ := NewLeague(f.database)
 	return league
 }
 
-func (f *FileSystemStore) GetPlayerStore(name string) int {
+func (f *FileSystemStore) GetPlayerScore(name string) int {
+	player := f.GetLeague().Find(name)
 
-	var wins int
-
-	for _, player := range f.GetLeague() {
-		if player.Name == name {
-			wins = player.Wins
-			break
-		}
+	if player != nil {
+		return player.Wins
 	}
-
-	return wins
+	return 0
 }
 
 func (f *FileSystemStore) RecordWin(name string) {
 	league := f.GetLeague()
+	player := league.Find(name)
 
-	for i, player := range league {
-		if player.Name == name {
-			league[i].Wins++
-		}
+	if player != nil {
+		player.Wins++
 	}
 
 	f.database.Seek(0, 0)
@@ -77,7 +71,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		store := FileSystemStore{database}
 
-		got := store.GetPlayerStore("Chris")
+		got := store.GetPlayerScore("Chris")
 
 		want := 33
 
@@ -94,7 +88,7 @@ func TestFileSystemStore(t *testing.T) {
 
 		store.RecordWin("Chris")
 
-		got := store.GetPlayerStore("Chris")
+		got := store.GetPlayerScore("Chris")
 
 		want := 34
 		assertScoreEquals(t, got, want)
