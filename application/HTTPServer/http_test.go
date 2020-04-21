@@ -105,8 +105,11 @@ func TestStoreWin(t *testing.T) {
 }
 
 func TestRecordingWinsAndRetrievingThem(t *testing.T) {
-	store := NewInMemoryPlayerStore()
-	server := NewPlayerServer(store)
+	database, cleanDatabase := createTempFile(t, "")
+	defer cleanDatabase()
+	store := FileSystemStore{database}
+	server := NewPlayerServer(&store) // ⚠️ 关于这里为什么用 指针： 因为 FileSystemStore 为了符合 NewPlayerServer 的参数要符合 PlayerStore 接口的 3个方法；
+	//  而这 3个方法的调用，都是使用 NewPlayerServer 的指针才能调用的
 	player := "pepper"
 
 	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
