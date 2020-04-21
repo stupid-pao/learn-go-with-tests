@@ -16,6 +16,20 @@ func (f *FileSystemStore) GetLeague() []Player {
 	return league
 }
 
+func (f *FileSystemStore) GetPlayerStore(name string) int {
+
+	var wins int
+
+	for _, player := range f.GetLeague() {
+		if player.Name == name {
+			wins = player.Wins
+			break
+		}
+	}
+
+	return wins
+}
+
 func TestFileSystemStore(t *testing.T) {
 
 	t.Run("/league from a reader", func(t *testing.T) {
@@ -37,5 +51,21 @@ func TestFileSystemStore(t *testing.T) {
 
 		got = store.GetLeague()
 		assertLeague(t, got, want)
+	})
+
+	t.Run("get player score", func(t *testing.T) {
+		database := strings.NewReader(`[
+		    {"Name": "Cleo", "Wins": 10},
+		    {"Name": "Chris", "Wins": 33}]`)
+
+		store := FileSystemStore{database}
+
+		got := store.GetPlayerStore("Chris")
+
+		want := 33
+
+		if got != want {
+			t.Errorf("got %d want %d", got, want)
+		}
 	})
 }
