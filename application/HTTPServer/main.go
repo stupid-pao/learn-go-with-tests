@@ -15,7 +15,7 @@ func main() {
 		log.Fatalf("problem opening %s %v", dbFileName, err)
 	}
 
-	store := NewFileSystemStore(db)
+	store, _ := NewFileSystemStore(db)
 	server := NewPlayerServer(store)
 
 	if err := http.ListenAndServe("localhost:5000", server); err != nil {
