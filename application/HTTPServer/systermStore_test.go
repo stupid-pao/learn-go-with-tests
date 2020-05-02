@@ -2,22 +2,21 @@ package main
 
 import (
 	"encoding/json"
-	"io"
 	"io/ioutil"
 	"os"
 	"testing"
 )
 
 type FileSystemStore struct {
-	database io.ReadWriteSeeker
+	database *json.Encoder
 	league   League
 }
 
-func NewFileSystemStore(database io.ReadWriteSeeker) *FileSystemStore {
-	database.Seek(0, 0)
-	league, _ := NewLeague(database)
+func NewFileSystemStore(file *os.File) *FileSystemStore {
+	file.Seek(0, 0)
+	league, _ := NewLeague(file)
 	return &FileSystemStore{
-		database: database,
+		database: json.NewEncoder(&Tape{file}),
 		league:   league,
 	}
 
@@ -45,8 +44,7 @@ func (f *FileSystemStore) RecordWin(name string) {
 		f.league = append(f.league, Player{Name: name, Wins: 1})
 	}
 
-	f.database.Seek(0, 0)
-	json.NewEncoder(f.database).Encode(f.league)
+	f.database.Encode(f.league)
 
 }
 
@@ -127,7 +125,7 @@ func assertScoreEquals(t *testing.T, got, want int) {
 	}
 }
 
-func createTempFile(t *testing.T, initialData string) (io.ReadWriteSeeker, func()) {
+func createTempFile(t *testing.T, initialData string) (*os.File, func()) {
 	t.Helper()
 
 	tmpfile, err := ioutil.TempFile("", "db")
