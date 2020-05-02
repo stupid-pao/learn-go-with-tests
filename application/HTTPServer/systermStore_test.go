@@ -10,12 +10,21 @@ import (
 
 type FileSystemStore struct {
 	database io.ReadWriteSeeker
+	league   League
+}
+
+func NewFileSystemStore(database io.ReadWriteSeeker) *FileSystemStore {
+	database.Seek(0, 0)
+	league, _ := NewLeague(database)
+	return &FileSystemStore{
+		database: database,
+		league:   league,
+	}
+
 }
 
 func (f *FileSystemStore) GetLeague() League {
-	f.database.Seek(0, 0)
-	league, _ := NewLeague(f.database)
-	return league
+	return f.league
 }
 
 func (f *FileSystemStore) GetPlayerScore(name string) int {
@@ -28,17 +37,16 @@ func (f *FileSystemStore) GetPlayerScore(name string) int {
 }
 
 func (f *FileSystemStore) RecordWin(name string) {
-	league := f.GetLeague()
-	player := league.Find(name)
+	player := f.league.Find(name)
 
 	if player != nil {
 		player.Wins++
 	} else {
-		league = append(league, Player{Name: name, Wins: 1})
+		f.league = append(f.league, Player{Name: name, Wins: 1})
 	}
 
 	f.database.Seek(0, 0)
-	json.NewEncoder(f.database).Encode(league)
+	json.NewEncoder(f.database).Encode(f.league)
 
 }
 
@@ -50,7 +58,7 @@ func TestFileSystemStore(t *testing.T) {
 		    {"Name": "Chris", "Wins": 33}]`)
 		defer cleanDatabase()
 
-		store := FileSystemStore{database}
+		store := NewFileSystemStore(database)
 
 		got := store.GetLeague()
 
@@ -71,7 +79,7 @@ func TestFileSystemStore(t *testing.T) {
 		    {"Name": "Chris", "Wins": 33}]`)
 		defer cleanDatabase()
 
-		store := FileSystemStore{database}
+		store := NewFileSystemStore(database)
 
 		got := store.GetPlayerScore("Chris")
 
@@ -86,7 +94,7 @@ func TestFileSystemStore(t *testing.T) {
 		    {"Name": "Chris", "Wins": 33}]`)
 		defer cleanDatabase()
 
-		store := FileSystemStore{database}
+		store := NewFileSystemStore(database)
 
 		store.RecordWin("Chris")
 
@@ -102,7 +110,7 @@ func TestFileSystemStore(t *testing.T) {
 		    {"Name": "Chris", "Wins": 33}]`)
 		defer cleanDatabase()
 
-		store := FileSystemStore{database}
+		store := NewFileSystemStore(database)
 
 		store.RecordWin("Pepper")
 
